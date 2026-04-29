@@ -23,17 +23,19 @@ from .ar_tools import TOOLS as AR_TOOLS, HANDLERS as AR_HANDLERS
 from .expense_tools import TOOLS as EXPENSE_TOOLS, HANDLERS as EXPENSE_HANDLERS
 from .hcm_tools import TOOLS as HCM_TOOLS, HANDLERS as HCM_HANDLERS
 from .infra_tools import TOOLS as INFRA_TOOLS, HANDLERS as INFRA_HANDLERS
+from .math_tools import TOOLS as MATH_TOOLS, HANDLERS as MATH_HANDLERS
 from .write_po_tools import TOOLS as WRITE_PO_TOOLS, HANDLERS as WRITE_PO_HANDLERS
 from .write_ap_tools import TOOLS as WRITE_AP_TOOLS, HANDLERS as WRITE_AP_HANDLERS
 from .write_req_tools import TOOLS as WRITE_REQ_TOOLS, HANDLERS as WRITE_REQ_HANDLERS
 
 logger = logging.getLogger(__name__)
 
-_READ_TOOLS = AP_TOOLS + PROC_TOOLS + GL_TOOLS + AR_TOOLS + EXPENSE_TOOLS + HCM_TOOLS + INFRA_TOOLS
+_READ_TOOLS = AP_TOOLS + PROC_TOOLS + GL_TOOLS + AR_TOOLS + EXPENSE_TOOLS + HCM_TOOLS + INFRA_TOOLS + MATH_TOOLS
 _READ_HANDLERS: Dict[str, Any] = {
     **AP_HANDLERS, **PROC_HANDLERS, **GL_HANDLERS, **AR_HANDLERS,
-    **EXPENSE_HANDLERS, **HCM_HANDLERS, **INFRA_HANDLERS,
+    **EXPENSE_HANDLERS, **HCM_HANDLERS, **INFRA_HANDLERS, **MATH_HANDLERS,
 }
+_MATH_TOOL_NAMES = frozenset(MATH_HANDLERS.keys())
 
 _WRITE_TOOLS = WRITE_PO_TOOLS + WRITE_AP_TOOLS + WRITE_REQ_TOOLS
 _WRITE_HANDLERS: Dict[str, Any] = {**WRITE_PO_HANDLERS, **WRITE_AP_HANDLERS, **WRITE_REQ_HANDLERS}
@@ -63,6 +65,14 @@ async def handle_tool_call(
                 f"Tool '{tool_name}' requires MCP_MODE=full. Current mode is 'readonly'."
             )
 
+        handler = _ALL_HANDLERS.get(tool_name)
+        if not handler:
+            return _text_result({"error": f"Tool '{tool_name}' not found"})
+
+        # Math tools operate on records already fetched — skip Oracle auth
+        if tool_name in _MATH_TOOL_NAMES:
+            return await handler(request, session, tool_arguments, None)
+
         basic_auth = getattr(request.state, "basic_auth", None)
         oracle_jwt = getattr(request.state, "oracle_jwt", False)
         entra_bearer = getattr(request.state, "entra_bearer", False)
@@ -77,10 +87,6 @@ async def handle_tool_call(
                 return _text_result({"error": "Oracle JWT signer not configured. Use Basic Auth."})
         else:
             return _text_result({"error": "No Oracle credentials available. Set ORACLE_USERNAME and ORACLE_PASSWORD."})
-
-        handler = _ALL_HANDLERS.get(tool_name)
-        if not handler:
-            return _text_result({"error": f"Tool '{tool_name}' not found"})
 
         return await handler(request, session, tool_arguments, oracle_client)
 
