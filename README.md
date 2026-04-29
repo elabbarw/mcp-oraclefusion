@@ -2,6 +2,8 @@
 
 An [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for Oracle Fusion Cloud ERP. Gives any MCP-compatible AI client (Claude, Cursor, Windsurf, etc.) read-only access to your Oracle Fusion data via STDIO transport.
 
+**Authentication:** Basic Auth, Oracle JWT, (WIP: OAuth via Microsoft Entra ID)
+
 ## Quick start
 
 Install and run via `uvx`:
@@ -77,6 +79,10 @@ Ask natural-language questions about your Oracle Fusion data:
 | `ORACLE_FUSION_API_VERSION` | No | REST API version (default `11.13.18.05`) |
 | `MCP_MODE` | No | `readonly` (default) or `full` (enables write tools) |
 | `LOG_LEVEL` | No | `WARNING` (default), `INFO`, `DEBUG` — logs go to stderr |
+
+### OAuth / Microsoft Entra ID (coming soon)
+
+OAuth login via Microsoft Entra ID is supported for multi-user deployments where each user authenticates with their corporate identity. This is currently being tested internally and will be documented once validated.
 
 ### JWT authentication (alternative to password)
 
