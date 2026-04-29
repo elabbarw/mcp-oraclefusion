@@ -45,8 +45,11 @@ Ask natural-language questions about your Oracle Fusion data:
 - *"Look up supplier details for ACME Corp including sites and contacts"*
 - *"Show AR invoices for customer XYZ"*
 - *"Test the Oracle connection and show record counts"*
+- *"What's the total invoice amount from Google this quarter?"*
+- *"Break down AP spend by supplier, top 10"*
+- *"What percentage of total spend is each business unit?"*
 
-## Tools (24 read + 7 write)
+## Tools (30 read + 7 write)
 
 ### Accounts Payable
 `search_invoices`, `get_invoice_details`, `search_payments`, `get_payment_details`, `list_payment_terms`
@@ -65,6 +68,11 @@ Ask natural-language questions about your Oracle Fusion data:
 
 ### Infrastructure
 `test_oracle_connection`
+
+### Math / Aggregation
+`aggregate_records`, `sumif_records`, `group_by_aggregate`, `lookup_record`, `percentage_of_total`, `safe_divide`
+
+These tools run locally — no Oracle API calls. They use Python `Decimal` arithmetic to avoid float drift on currency values. The LLM fetches records with the search tools above, then passes them to these tools for exact computation (sums, averages, conditional aggregation, group-by pivots, percentages, ratios).
 
 ### Write tools (set `MCP_MODE=full` to enable)
 `create_purchase_order`, `update_po_distribution`, `change_po_status`, `create_invoice`, `change_invoice_status`, `create_requisition`, `change_requisition_status`
